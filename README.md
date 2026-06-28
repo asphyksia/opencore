@@ -18,9 +18,13 @@ What's wired up and tested:
   - `chat` — conversational soul, read-only by default (bash denied)
 - **Two-level memory** plugin:
   - working memory = opencode's native session context
-  - long-term memory = local JSONL store at `~/.moa/memory/long-term.jsonl`
+  - long-term memory = local SQLite + FTS5 store at `~/.moa/memory/memory.db`
+    (full-text search via BM25, ranked and blended with fact importance)
   - tools `memory_remember` / `memory_search`
   - relevant facts injected back on context compaction
+  - runs on Bun's built-in `bun:sqlite` (opencode's plugin runtime) — no native
+    build step, no external dependency
+  - facts from the old V1 JSONL store are migrated automatically on first run
 - **Token budget** plugin: daily usage tracking + warn threshold, state at
   `~/.moa/budget/<date>.json`
 - Hardened permissions: `rm -rf`, `sudo` hard-denied; most bash gated by `ask`.
@@ -36,6 +40,8 @@ What's wired up and tested:
 │   │   └── chat.md          # CHAT soul (conversational)
 │   ├── plugins/
 │   │   ├── memory.ts        # two-level memory + tools + compaction hook
+│   │   ├── lib/
+│   │   │   └── memory-store.ts  # SQLite + FTS5 storage layer
 │   │   └── budget.ts        # token budget tracking
 │   └── package.json         # plugin dependency (@opencode-ai/plugin)
 ├── package.json             # depends on opencode-ai
@@ -88,9 +94,10 @@ The agent can call these during a session:
 
 ## Notes & roadmap
 
-- **Storage is JSONL in V1** (dependency-free, cross-platform). V2 migrates
-  long-term memory to SQLite + FTS5 for scalable full-text search; the tool
-  surface (`memory_remember` / `memory_search`) is designed to stay stable.
+- **Long-term memory uses SQLite + FTS5** via Bun's built-in `bun:sqlite`
+  (opencode's plugin runtime). No native build step, no external dependency.
+  Search is full-text (BM25) blended with fact importance. The V1 JSONL store
+  is migrated automatically on first run and archived as `*.migrated`.
 - The memory-injection hook uses opencode's `experimental.session.compacting`,
   which is experimental — the injection path is kept swappable.
 - V2: 24/7 daemon + Telegram gateway (external process via the opencode SDK),
