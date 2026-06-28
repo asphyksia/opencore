@@ -165,6 +165,22 @@ if ($DisableBuild) {
   Write-Host "  - left 'build' agent enabled (use -DisableBuild to disable it)"
 }
 
+# Add MOA's default MCP servers (only if a server of that name isn't already
+# present). These are remote, no-auth, coding-focused servers.
+$moaMcp = [ordered]@{
+  context7 = [ordered]@{ type = "remote"; url = "https://mcp.context7.com/mcp"; enabled = $true }
+  gh_grep  = [ordered]@{ type = "remote"; url = "https://mcp.grep.app";         enabled = $true }
+}
+if (-not $cfg.Contains("mcp")) { $cfg["mcp"] = [ordered]@{} }
+foreach ($name in $moaMcp.Keys) {
+  if (-not $cfg["mcp"].Contains($name)) {
+    $cfg["mcp"][$name] = $moaMcp[$name]
+    Write-Host "  + mcp server '$name'"
+  } else {
+    Write-Host "  - mcp server '$name' already present - left as-is"
+  }
+}
+
 $cfg | ConvertTo-Json -Depth 20 | Set-Content $globalCfgPath -Encoding utf8
 Write-Host "  wrote $globalCfgPath"
 

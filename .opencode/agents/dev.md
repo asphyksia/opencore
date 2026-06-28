@@ -1,5 +1,5 @@
 ---
-description: DEV soul — professional coding mode. Concise, technical, result-oriented with broad workspace permissions.
+description: DEV soul - professional coding mode. Concise, technical, result-oriented with broad workspace permissions.
 mode: primary
 temperature: 0.2
 permission:

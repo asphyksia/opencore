@@ -33,9 +33,15 @@ GitHub: https://github.com/asphyksia/MOA
   - lazy auto-index on first search; `file.edited` incremental re-index
   - project-root guard + MAX_FILES cap (fixes a hang in non-project dirs)
 - **Token budget plugin** (`.opencode/plugins/budget.ts`) — daily tracking + warn
-- **Install** — `scripts/install.ps1` syncs agents/plugins to `~/.config/opencode`
-  and merges MOA defaults into the global `opencode.json` WITHOUT touching the
-  user's provider/model. PowerShell 5.1 compatible (no `-AsHashtable`).
+- **MCP servers** — configured under `mcp` in `opencode.json` (native opencode):
+  `context7` (library docs) and `gh_grep` (GitHub code search), both remote/no-auth.
+  Verified connected and usable by the agent.
+- **Install** — `scripts/install.ps1` (Windows) and `scripts/install.sh` (macOS/
+  Linux) sync agents/plugins to `~/.config/opencode`, ensure the
+  `@opencode-ai/plugin` dependency, and merge MOA defaults (default_agent,
+  permissions, MCP servers) into the global `opencode.json` WITHOUT touching the
+  user's provider/model. Non-intrusive: `build` is only disabled with the opt-in
+  `-DisableBuild` / `--disable-build` flag. Idempotent. PowerShell 5.1 compatible.
 
 ## Runtime facts
 
@@ -63,7 +69,8 @@ GitHub: https://github.com/asphyksia/MOA
 
 - Confirm desktop app shows dev/chat after restart.
 - Real-use testing of chat/dev (tone, memory recall, RAG).
-- Possible: embeddings (semantic search), Telegram/daemon gateway.
+- Possible: more MCP servers, agentskills.io skills, embeddings (semantic
+  search), Telegram/daemon gateway.
 
 ## Commit log (recent)
 

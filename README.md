@@ -34,13 +34,17 @@ What's wired up and tested:
     `codebase_search` (keyword/BM25 search returning file path + line range)
   - incremental re-index on `file.edited`
   - keyword search, no embeddings (known limit: no synonym/semantic match)
+- **MCP servers** (external tools via Model Context Protocol, native to opencode):
+  - `context7` — up-to-date library/framework documentation search
+  - `gh_grep` — real-world code examples from GitHub (Grep by Vercel)
+  - both remote, no auth; tools auto-available to the agent (prefixed by server name)
 - Hardened permissions: `rm -rf`, `sudo` hard-denied; most bash gated by `ask`.
 
 ## Layout
 
 ```
 .
-├── opencode.json            # base config: default agent, permissions, model env
+├── opencode.json            # base config: default agent, permissions, model env, MCP servers
 ├── .opencode/
 │   ├── agents/
 │   │   ├── dev.md           # DEV soul (coding)
@@ -153,6 +157,18 @@ The agent can call these during a session:
   (respects .gitignore). Run once per project or after large changes.
 - `codebase_search { query, limit? }` — keyword/BM25 search over indexed code,
   returns matching chunks with file path and line range.
+
+## MCP tools
+
+External tools via Model Context Protocol, configured under `mcp` in
+`opencode.json`. Tools are auto-available to the agent, prefixed by server name.
+
+- `context7` — search up-to-date library docs. Add `use context7` to a prompt.
+- `gh_grep` — search real code examples on GitHub. Add `use the gh_grep tool`.
+
+Add more servers (local or remote) under `mcp` in the config; see
+[opencode MCP docs](https://opencode.ai/docs/mcp-servers/). Note: each server
+adds to context, so enable selectively.
 
 ## Notes & roadmap
 

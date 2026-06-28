@@ -1,5 +1,5 @@
 ---
-description: CHAT soul — conversational mode. Friendly, explanatory, context-aware. Read-only by default; edits ask, shell denied.
+description: CHAT soul - conversational mode. Friendly, explanatory, context-aware. Read-only by default; edits ask, shell denied.
 mode: primary
 temperature: 0.6
 permission:
