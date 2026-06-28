@@ -1,6 +1,39 @@
 import { join, extname, relative, sep } from "node:path"
-import { readFileSync, statSync, readdirSync } from "node:fs"
+import { readFileSync, statSync, readdirSync, existsSync } from "node:fs"
 import type { Chunk } from "./codebase-store"
+
+// Hard cap on files discovered in a single index run, so a non-project
+// directory can never trigger a runaway filesystem walk.
+const MAX_FILES = 5000
+
+// Markers that indicate a directory is an actual project worth indexing.
+const PROJECT_MARKERS = [
+  ".git",
+  "package.json",
+  "tsconfig.json",
+  "pyproject.toml",
+  "setup.py",
+  "requirements.txt",
+  "go.mod",
+  "Cargo.toml",
+  "pom.xml",
+  "build.gradle",
+  "Gemfile",
+  "composer.json",
+  ".opencode",
+]
+
+/**
+ * Whether `dir` looks like a project root. Codebase RAG should only auto-index
+ * real projects — never an arbitrary directory like HOME or a temp folder,
+ * where a walk could be enormous and meaningless.
+ */
+export function isProjectRoot(dir: string): boolean {
+  for (const m of PROJECT_MARKERS) {
+    if (existsSync(join(dir, m))) return true
+  }
+  return false
+}
 
 /**
  * File discovery + chunking for codebase indexing.
@@ -74,6 +107,7 @@ export async function discoverFiles(
 }
 
 function walk(root: string, dir: string, acc: string[] = []): string[] {
+  if (acc.length >= MAX_FILES) return acc
   let entries: any[]
   try {
     entries = readdirSync(dir, { withFileTypes: true })
@@ -81,6 +115,7 @@ function walk(root: string, dir: string, acc: string[] = []): string[] {
     return acc
   }
   for (const e of entries) {
+    if (acc.length >= MAX_FILES) break
     const full = join(dir, e.name)
     if (e.isDirectory()) {
       if (SKIP_DIRS.has(e.name) || e.name.startsWith(".")) continue

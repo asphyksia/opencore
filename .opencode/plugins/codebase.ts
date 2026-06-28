@@ -9,7 +9,7 @@ import {
   setMeta,
   getMeta,
 } from "./lib/codebase-store"
-import { discoverFiles, chunkFile, shouldIndex } from "./lib/indexer"
+import { discoverFiles, chunkFile, shouldIndex, isProjectRoot } from "./lib/indexer"
 
 /**
  * MOA codebase RAG plugin.
@@ -84,6 +84,13 @@ export const CodebasePlugin: Plugin = async ({ directory, worktree, $, client })
             .describe("If true, clear the existing index before reindexing."),
         },
         async execute(args) {
+          if (!isProjectRoot(projectDir)) {
+            return (
+              "Current directory does not look like a project root (no .git, " +
+              "package.json, etc.), so it was not indexed. Open MOA from inside " +
+              "a project to use codebase search."
+            )
+          }
           const s = await buildIndex(!!args.rebuild)
           return `Indexed ${s.files} files into ${s.chunks} chunks for this project.`
         },
@@ -107,9 +114,16 @@ export const CodebasePlugin: Plugin = async ({ directory, worktree, $, client })
           const limit = args.limit ?? 8
 
           // Lazy auto-index: build the index on first use so the user/agent
-          // doesn't have to call codebase_index manually.
+          // doesn't have to call codebase_index manually. Only for real
+          // project roots — never walk an arbitrary directory.
           const last = await getMeta(projectDir, "lastIndexed")
           if (!last) {
+            if (!isProjectRoot(projectDir)) {
+              return (
+                "Current directory does not look like a project root, so there " +
+                "is no code index. Open MOA from inside a project to search code."
+              )
+            }
             await log("no index yet — building lazily on first search")
             await buildIndex(false)
           }

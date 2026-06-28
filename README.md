@@ -54,12 +54,32 @@ What's wired up and tested:
 │   │   │   └── indexer.ts        # file discovery + line-range chunking
 │   │   └── budget.ts        # token budget tracking
 │   └── package.json         # plugin dependency (@opencode-ai/plugin)
+├── scripts/
+│   └── install.ps1          # sync agents+plugins into global opencode config
 ├── package.json             # depends on opencode-ai
 ├── .env.example             # provider keys + model selection
 └── arquitectura-agente.md   # architecture doc (kept in Downloads)
 ```
 
 Local runtime data lives in `~/.moa/` (memory, budget) — outside the repo.
+
+## Install (use MOA everywhere)
+
+By default, opencode only loads a project's agents/plugins when launched from
+that project's directory. To make MOA's `dev`/`chat` agents and plugins
+available in **any** directory (so they show up when you press `Tab` in the
+TUI), install them into your global opencode config:
+
+```powershell
+# from the repo root (Windows)
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+```
+
+This copies `agents/` and `plugins/` into `~/.config/opencode/` and merges
+MOA's defaults into the global `opencode.json` **without touching your existing
+provider/model config**. Re-run it after changing any agent or plugin to sync.
+
+The repo stays the source of truth; the global config is just an installation.
 
 ## Prerequisites
 
