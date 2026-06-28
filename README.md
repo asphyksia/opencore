@@ -1,204 +1,123 @@
-# MOA
+# MOA (Mixture Of Agents)
 
-A professional coding agent with a first-class conversational mode, built on
-[opencode](https://opencode.ai). MOA is **not a fork** of opencode — it consumes
-opencode as a dependency and adds a conversational layer (souls / dual mode,
-two-level memory, token budget) through opencode's documented extension points:
-agents, plugins and the SDK.
+**A professional coding agent with a first-class conversational mode.**
 
-See `arquitectura-agente.md` (in Downloads) for the full architecture and the
-reasoning behind building on opencode instead of forking Mercury.
+Built on [opencode](https://opencode.ai) as a dependency (not a fork), MOA adds dual-mode personalities, persistent memory, and intelligent codebase understanding through opencode's plugin system.
 
-## Status: V1 skeleton (verified working)
+---
 
-What's wired up and tested:
+## What is MOA?
 
-- **Dual mode** via two custom primary agents (switch with `Tab`):
-  - `dev` — professional coding soul, broad workspace permissions
-  - `chat` — conversational soul, read-only by default (bash denied)
-- **Two-level memory** plugin:
-  - working memory = opencode's native session context
-  - long-term memory = local SQLite + FTS5 store at `~/.moa/memory/memory.db`
-    (full-text search via BM25, ranked and blended with fact importance)
-  - tools `memory_remember` / `memory_search`
-  - relevant facts injected back on context compaction
-  - runs on Bun's built-in `bun:sqlite` (opencode's plugin runtime) — no native
-    build step, no external dependency
-  - facts from the old V1 JSONL store are migrated automatically on first run
-- **Token budget** plugin: daily usage tracking + warn threshold, state at
-  `~/.moa/budget/<date>.json`
-- **Codebase RAG** plugin:
-  - per-project SQLite + FTS5 index of the project's files at
-    `~/.moa/codebase/<project-hash>.db`
-  - tools `codebase_index` (build/rebuild, respects .gitignore) and
-    `codebase_search` (keyword/BM25 search returning file path + line range)
-  - incremental re-index on `file.edited`
-  - keyword search, no embeddings (known limit: no synonym/semantic match)
-- **MCP servers** (external tools via Model Context Protocol, native to opencode):
-  - `context7` — up-to-date library/framework documentation search
-  - `gh_grep` — real-world code examples from GitHub (Grep by Vercel)
-  - both remote, no auth; tools auto-available to the agent (prefixed by server name)
-- **Agent Skills** (`SKILL.md`, agentskills.io-compatible, native to opencode):
-  - `git-release` — draft release notes, propose a semver bump, produce a
-    ready-to-run release command
-  - loaded on-demand via the `skill` tool (no context cost until used)
-  - same format the future Hermes-style auto-creation (V3) will emit
-- Hardened permissions: `rm -rf`, `sudo` hard-denied; most bash gated by `ask`.
+MOA gives you two agents in one:
 
-## Layout
+- **`dev` mode** — Professional coding assistant with broad permissions for actual development work
+- **`chat` mode** — Conversational helper, read-only by default, safe for exploration and questions
 
-```
-.
-├── opencode.json            # base config: default agent, permissions, model env, MCP servers
-├── .opencode/
-│   ├── agents/
-│   │   ├── dev.md           # DEV soul (coding)
-│   │   └── chat.md          # CHAT soul (conversational)
-│   ├── plugins/
-│   │   ├── memory.ts        # two-level memory + tools + compaction hook
-│   │   ├── codebase.ts      # codebase RAG: index + search tools
-│   │   ├── lib/
-│   │   │   ├── memory-store.ts   # SQLite + FTS5 storage layer (memory)
-│   │   │   ├── codebase-store.ts # SQLite + FTS5 storage layer (per-project code)
-│   │   │   └── indexer.ts        # file discovery + line-range chunking
-│   │   └── budget.ts        # token budget tracking
-│   ├── skills/
-│   │   └── git-release/SKILL.md  # example skill (agentskills.io format)
-│   └── package.json         # plugin dependency (@opencode-ai/plugin)
-├── scripts/
-│   ├── install.ps1          # sync into global opencode config (Windows)
-│   └── install.sh           # sync into global opencode config (macOS/Linux)
-├── package.json             # depends on opencode-ai
-├── .env.example             # provider keys + model selection
-└── arquitectura-agente.md   # architecture doc (kept in Downloads)
-```
+Switch between them anytime with `Tab`.
 
-Local runtime data lives in `~/.moa/` (memory, budget) — outside the repo.
+---
 
-## Install (use MOA everywhere)
+## Key Features
 
-By default, opencode only loads a project's agents/plugins when launched from
-that project's directory. To make MOA's `dev`/`chat` agents and plugins
-available in **any** directory (so they show up when you press `Tab` in the
-TUI), install them into your global opencode config:
+### 🧠 Two-Level Memory
+- **Working memory**: Your current conversation (session context)
+- **Long-term memory**: Persisted facts, preferences, and project knowledge in local SQLite
+- The agent remembers what you tell it across sessions and auto-injects relevant context
+
+### 🔍 Codebase Understanding
+- **Semantic search** over your project files (hybrid BM25 + optional embeddings)
+- Automatic indexing that respects `.gitignore`
+- Incremental updates as you edit files
+- Find functions, patterns, or concepts with natural queries
+
+### 🎯 Smart Context
+- **Token budget tracking** — know your daily usage
+- **MCP integration** — `context7` for up-to-date library docs, `gh_grep` for real-world code examples
+- **Agent Skills** — reusable instruction templates (like `git-release` for generating changelogs)
+
+### 🔒 Safe by Default
+- Hardened permissions: `rm -rf` and `sudo` blocked
+- Destructive operations require confirmation
+- Model-agnostic: use any LLM you want (OpenAI, Anthropic, local models via Ollama)
+
+### 🌐 Optional: Telegram Gateway
+- Talk to MOA from anywhere via Telegram
+- Runs as a local daemon or Docker container for 24/7 availability
+- Secure pairing system with admin controls
+
+---
+
+## Requirements
+
+- Node.js 20+
+- opencode installed: `npm i -g opencode-ai`
+- An LLM provider configured in opencode (`opencode auth login` or set an API key)
+
+## Install
+
+The installer syncs MOA's agents and plugins into your global opencode config so they're available in any directory.
 
 ```powershell
 # Windows
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-```
 
-```sh
 # macOS / Linux
 ./scripts/install.sh
 ```
 
-The installer:
-- copies `agents/` and `plugins/` into `~/.config/opencode/`
-- ensures the `@opencode-ai/plugin` dependency is installed there (so plugins
-  load from any directory)
-- merges MOA's defaults (`default_agent`, hardened permissions) into the global
-  `opencode.json` **only if absent** — it never overwrites your provider/model
-  or existing settings, and warns when it skips something
+Non-intrusive: only adds missing settings, never overwrites your provider/model config. Re-run after any change to sync.
 
-It is **non-intrusive by default**: it does not touch opencode's built-in
-`build` agent. If you want to hide `build` (since `dev` is its MOA-tuned
-replacement), opt in:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -DisableBuild   # Windows
-```
-```sh
-./scripts/install.sh --disable-build                                          # macOS / Linux
-```
-
-Re-run the installer after changing any agent or plugin to sync. The repo stays
-the source of truth; the global config is just an installation.
-
-> If the desktop app is running, restart it to pick up changes — it reads the
-> same global config but caches it at startup.
-
-## Prerequisites
-
-- Node.js 20+
-- opencode installed (`npm i -g opencode-ai` or see opencode docs). Verified with
-  opencode `1.17.11`.
-- An LLM provider configured for opencode (run `opencode auth login`, or set a
-  provider API key). MOA is model-agnostic — you choose the model.
+> Restart the opencode desktop app after installing to pick up changes.
 
 ## Usage
 
 ```sh
-# default agent is `dev`
-opencode
-
-# start directly in a given mode
-opencode --agent dev
-opencode --agent chat
-
-# switch modes inside a session with the Tab key
-
-# list agents (confirms dev + chat load)
-opencode agent list
+opencode              # starts in dev mode (default)
+opencode --agent chat # start in chat mode
+# press Tab to switch modes mid-session
 ```
 
-Optional model selection via env (see `.env.example`):
+Optional: set your preferred model via env (see `.env.example`).
 
-```sh
-# MOA_MODEL=anthropic/claude-sonnet-4-5
-# MOA_SMALL_MODEL=anthropic/claude-haiku-4-5
+---
+
+## Tools reference
+
+**Memory**
+- `memory_remember { text, type, importance? }` — store a fact (`preference` | `goal` | `project` | `decision` | `note`)
+- `memory_search { query }` — retrieve relevant stored facts
+
+**Codebase**
+- `codebase_index { rebuild? }` — index the current project (run once, then auto-updates)
+- `codebase_search { query }` — search indexed code by keyword or concept
+
+**MCP (external)**
+- `context7` — up-to-date library/framework docs
+- `gh_grep` — real code examples from GitHub
+
+**Skills** (loaded on demand, no context cost until used)
+- `git-release` — draft release notes, propose a semver bump, produce a release command
+
+Add more MCP servers under `mcp` in `opencode.json`. Add more skills by creating `.opencode/skills/<name>/SKILL.md`.
+
+---
+
+## Layout
+
+```
+.opencode/
+├── agents/
+│   ├── dev.md          # dev soul + permissions
+│   └── chat.md         # chat soul + permissions
+├── plugins/
+│   ├── memory.ts       # long-term memory (SQLite)
+│   ├── codebase.ts     # codebase RAG (SQLite)
+│   └── budget.ts       # token usage tracking
+└── skills/
+    └── git-release/SKILL.md
+scripts/
+├── install.ps1         # Windows installer
+└── install.sh          # macOS/Linux installer
 ```
 
-If `MOA_MODEL` is unset, opencode uses its own model selector / global config.
-
-## Memory tools
-
-The agent can call these during a session:
-
-- `memory_remember { text, type, importance? }` — store a durable fact
-  (types: identity | preference | goal | project | decision | note)
-- `memory_search { query, limit? }` — retrieve relevant stored facts
-
-## Codebase tools
-
-- `codebase_index { rebuild? }` — build/rebuild the project's full-text index
-  (respects .gitignore). Run once per project or after large changes.
-- `codebase_search { query, limit? }` — keyword/BM25 search over indexed code,
-  returns matching chunks with file path and line range.
-
-## MCP tools
-
-External tools via Model Context Protocol, configured under `mcp` in
-`opencode.json`. Tools are auto-available to the agent, prefixed by server name.
-
-- `context7` — search up-to-date library docs. Add `use context7` to a prompt.
-- `gh_grep` — search real code examples on GitHub. Add `use the gh_grep tool`.
-
-Add more servers (local or remote) under `mcp` in the config; see
-[opencode MCP docs](https://opencode.ai/docs/mcp-servers/). Note: each server
-adds to context, so enable selectively.
-
-## Skills
-
-Reusable instructions in `SKILL.md` files (agentskills.io format), discovered
-from `.opencode/skills/<name>/SKILL.md` and loaded on-demand via the `skill`
-tool — no context cost until the agent actually loads one.
-
-- `git-release` — release notes + semver bump + ready-to-run release command.
-
-To add a skill: create `.opencode/skills/<name>/SKILL.md` with `name` and
-`description` frontmatter, then re-run the installer to sync it globally. This
-is the **same format** the planned V3 auto-creation (Hermes-inspired) will emit,
-so hand-written and auto-generated skills are interchangeable — the V3 work is
-the quality evaluator, not the format.
-
-## Notes & roadmap
-
-- **Long-term memory uses SQLite + FTS5** via Bun's built-in `bun:sqlite`
-  (opencode's plugin runtime). No native build step, no external dependency.
-  Search is full-text (BM25) blended with fact importance. The V1 JSONL store
-  is migrated automatically on first run and archived as `*.migrated`.
-- The memory-injection hook uses opencode's `experimental.session.compacting`,
-  which is experimental — the injection path is kept swappable.
-- V2: 24/7 daemon + Telegram gateway (external process via the opencode SDK),
-  codebase RAG, optional own web UI.
-- V3: learning loop (skill auto-generation) once a quality evaluator exists.
+Runtime data (`~/.moa/`) lives outside the repo — memory, budget, codebase indexes.

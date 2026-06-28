@@ -69,9 +69,9 @@ GitHub: https://github.com/asphyksia/MOA
   agent `chat` (no shell), `dev` is admin-only and explicit. Commands: /pair,
   /chat, /dev, /plan, /new, /status. Built on grammy + @opencode-ai/sdk.
   Phases 1-2 done and smoke-tested end-to-end (spawn -> session -> prompt).
-  Phase 3 (auto-start daemon) pending - run manually first with a real token.
-  VERIFIED in real use: bot @orionic_bot pairs, responds in chat mode, RAG +
-  memory work over Telegram. Command menu registered via setMyCommands.
+  Phase 3 (auto-start daemon) done and verified. VERIFIED in real use: gateway
+  pairs, responds in chat mode, RAG + memory work over Telegram. Command menu
+  registered via setMyCommands.
   SESSION FINDING (resolves the earlier open question): Telegram and the desktop
   GUI do NOT share a live session - the gateway always creates a fresh
   `telegram:<chatId>` session on its own opencode serve. What they DO share:
@@ -97,8 +97,8 @@ GitHub: https://github.com/asphyksia/MOA
 
 - opencode CLI version 1.17.11; plugins run under **Bun** (so `bun:sqlite` + FTS5
   are available with no native build step).
-- Provider: `cavoti` in global `~/.config/opencode/opencode.json`. Models:
-  `cavoti/claude-opus-4-8`, `cavoti/gpt-5.5`, `cavoti/gpt-5.5-pro`.
+- Provider and models: configured by the user in `~/.config/opencode/opencode.json`.
+  MOA is model-agnostic.
 - Local data lives in `~/.moa/` (memory, budget, codebase) — outside the repo.
 
 ## Key decisions / honest limits
