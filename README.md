@@ -55,7 +55,8 @@ What's wired up and tested:
 │   │   └── budget.ts        # token budget tracking
 │   └── package.json         # plugin dependency (@opencode-ai/plugin)
 ├── scripts/
-│   └── install.ps1          # sync agents+plugins into global opencode config
+│   ├── install.ps1          # sync into global opencode config (Windows)
+│   └── install.sh           # sync into global opencode config (macOS/Linux)
 ├── package.json             # depends on opencode-ai
 ├── .env.example             # provider keys + model selection
 └── arquitectura-agente.md   # architecture doc (kept in Downloads)
@@ -71,15 +72,39 @@ available in **any** directory (so they show up when you press `Tab` in the
 TUI), install them into your global opencode config:
 
 ```powershell
-# from the repo root (Windows)
+# Windows
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 ```
 
-This copies `agents/` and `plugins/` into `~/.config/opencode/` and merges
-MOA's defaults into the global `opencode.json` **without touching your existing
-provider/model config**. Re-run it after changing any agent or plugin to sync.
+```sh
+# macOS / Linux
+./scripts/install.sh
+```
 
-The repo stays the source of truth; the global config is just an installation.
+The installer:
+- copies `agents/` and `plugins/` into `~/.config/opencode/`
+- ensures the `@opencode-ai/plugin` dependency is installed there (so plugins
+  load from any directory)
+- merges MOA's defaults (`default_agent`, hardened permissions) into the global
+  `opencode.json` **only if absent** — it never overwrites your provider/model
+  or existing settings, and warns when it skips something
+
+It is **non-intrusive by default**: it does not touch opencode's built-in
+`build` agent. If you want to hide `build` (since `dev` is its MOA-tuned
+replacement), opt in:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -DisableBuild   # Windows
+```
+```sh
+./scripts/install.sh --disable-build                                          # macOS / Linux
+```
+
+Re-run the installer after changing any agent or plugin to sync. The repo stays
+the source of truth; the global config is just an installation.
+
+> If the desktop app is running, restart it to pick up changes — it reads the
+> same global config but caches it at startup.
 
 ## Prerequisites
 
