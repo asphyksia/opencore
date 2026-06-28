@@ -65,6 +65,23 @@ find "$DEST/plugins" -name '*.ts' | while read -r p; do
   echo "  + plugins/${p#"$DEST/plugins/"}"
 done
 
+# 2b) Sync skills (one folder per skill). Warn before overwriting a same-named
+#     skill; leave unrelated user skills untouched.
+if [ -d "$SRC/skills" ]; then
+  echo "Syncing skills..."
+  mkdir -p "$DEST/skills"
+  for d in "$SRC"/skills/*/; do
+    [ -d "$d" ] || continue
+    name="$(basename "$d")"
+    if [ -e "$DEST/skills/$name" ]; then
+      echo "  ! overwriting existing skills/$name"
+      rm -rf "$DEST/skills/$name"
+    fi
+    cp -R "$d" "$DEST/skills/$name"
+    echo "  + skills/$name"
+  done
+fi
+
 # 3) Ensure the plugin dependency is present so plugins can import
 #    @opencode-ai/plugin from anywhere.
 echo "Ensuring plugin dependency..."

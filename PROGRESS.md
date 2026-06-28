@@ -36,6 +36,11 @@ GitHub: https://github.com/asphyksia/MOA
 - **MCP servers** — configured under `mcp` in `opencode.json` (native opencode):
   `context7` (library docs) and `gh_grep` (GitHub code search), both remote/no-auth.
   Verified connected and usable by the agent.
+- **Agent Skills** — `SKILL.md` files (agentskills.io format, native to opencode)
+  in `.opencode/skills/<name>/`. Example: `git-release`. Loaded on-demand via the
+  `skill` tool. IMPORTANT: this is the same format the V3 Hermes-style auto-
+  creation will emit, so the format work is already done — V3 only needs the
+  quality evaluator. Verified: agent discovers and loads the skill.
 - **Install** — `scripts/install.ps1` (Windows) and `scripts/install.sh` (macOS/
   Linux) sync agents/plugins to `~/.config/opencode`, ensure the
   `@opencode-ai/plugin` dependency, and merge MOA defaults (default_agent,

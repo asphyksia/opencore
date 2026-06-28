@@ -38,6 +38,11 @@ What's wired up and tested:
   - `context7` — up-to-date library/framework documentation search
   - `gh_grep` — real-world code examples from GitHub (Grep by Vercel)
   - both remote, no auth; tools auto-available to the agent (prefixed by server name)
+- **Agent Skills** (`SKILL.md`, agentskills.io-compatible, native to opencode):
+  - `git-release` — draft release notes, propose a semver bump, produce a
+    ready-to-run release command
+  - loaded on-demand via the `skill` tool (no context cost until used)
+  - same format the future Hermes-style auto-creation (V3) will emit
 - Hardened permissions: `rm -rf`, `sudo` hard-denied; most bash gated by `ask`.
 
 ## Layout
@@ -57,6 +62,8 @@ What's wired up and tested:
 │   │   │   ├── codebase-store.ts # SQLite + FTS5 storage layer (per-project code)
 │   │   │   └── indexer.ts        # file discovery + line-range chunking
 │   │   └── budget.ts        # token budget tracking
+│   ├── skills/
+│   │   └── git-release/SKILL.md  # example skill (agentskills.io format)
 │   └── package.json         # plugin dependency (@opencode-ai/plugin)
 ├── scripts/
 │   ├── install.ps1          # sync into global opencode config (Windows)
@@ -169,6 +176,20 @@ External tools via Model Context Protocol, configured under `mcp` in
 Add more servers (local or remote) under `mcp` in the config; see
 [opencode MCP docs](https://opencode.ai/docs/mcp-servers/). Note: each server
 adds to context, so enable selectively.
+
+## Skills
+
+Reusable instructions in `SKILL.md` files (agentskills.io format), discovered
+from `.opencode/skills/<name>/SKILL.md` and loaded on-demand via the `skill`
+tool — no context cost until the agent actually loads one.
+
+- `git-release` — release notes + semver bump + ready-to-run release command.
+
+To add a skill: create `.opencode/skills/<name>/SKILL.md` with `name` and
+`description` frontmatter, then re-run the installer to sync it globally. This
+is the **same format** the planned V3 auto-creation (Hermes-inspired) will emit,
+so hand-written and auto-generated skills are interchangeable — the V3 work is
+the quality evaluator, not the format.
 
 ## Notes & roadmap
 

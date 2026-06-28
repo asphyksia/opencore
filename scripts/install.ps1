@@ -69,6 +69,24 @@ Get-ChildItem $destPlugins -Recurse -Filter *.ts | ForEach-Object {
   Write-Host "  + plugins\$rel"
 }
 
+# 2b) Sync skills (one folder per skill, each with SKILL.md). Warn before
+#     overwriting a same-named skill; leave unrelated user skills untouched.
+$srcSkills = Join-Path $src "skills"
+if (Test-Path $srcSkills) {
+  Write-Host "Syncing skills..."
+  $destSkills = Join-Path $dest "skills"
+  New-Item -ItemType Directory -Force -Path $destSkills | Out-Null
+  Get-ChildItem $srcSkills -Directory | ForEach-Object {
+    $target = Join-Path $destSkills $_.Name
+    if (Test-Path $target) {
+      Write-Host "  ! overwriting existing skills\$($_.Name)" -ForegroundColor Yellow
+      Remove-Item $target -Recurse -Force
+    }
+    Copy-Item -Path $_.FullName -Destination $target -Recurse -Force
+    Write-Host "  + skills\$($_.Name)"
+  }
+}
+
 # 3) Ensure the plugin dependency is present in the global config dir, so the
 #    plugins can import `@opencode-ai/plugin` from anywhere.
 Write-Host "Ensuring plugin dependency..."
