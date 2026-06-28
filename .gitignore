@@ -8,6 +8,9 @@ node_modules/
 # stray local copies just in case
 .moa/
 
+# internal dev notes (not for public repo)
+PROGRESS.md
+
 # env
 .env
 .env.*
