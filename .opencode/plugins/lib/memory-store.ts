@@ -174,6 +174,18 @@ export async function addFact(fact: Fact): Promise<void> {
   void embedFact(fact.id, fact.text).catch(() => {})
 }
 
+export async function updateFact(id: string, text: string, importance: number): Promise<void> {
+  const d = await db()
+  d.prepare("UPDATE facts SET text = ?, importance = ? WHERE id = ?").run(text, importance, id)
+  // Re-embed with new text
+  void embedFact(id, text).catch(() => {})
+}
+
+export async function deleteFact(id: string): Promise<void> {
+  const d = await db()
+  d.prepare("DELETE FROM facts WHERE id = ?").run(id)
+}
+
 /** Embed one fact if embeddings are configured and content/model changed. */
 async function embedFact(id: string, text: string): Promise<void> {
   if (!embeddingsConfigured()) return
