@@ -1,0 +1,24 @@
+{
+  "name": "moa-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MOA Telegram gateway - talk to MOA (opencode) from Telegram, with pairing/allowlist security.",
+  "type": "module",
+  "bin": {
+    "moa-gateway": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "^1.17.11",
+    "grammy": "^1.30.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

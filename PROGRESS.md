@@ -47,6 +47,15 @@ GitHub: https://github.com/asphyksia/MOA
   permissions, MCP servers) into the global `opencode.json` WITHOUT touching the
   user's provider/model. Non-intrusive: `build` is only disabled with the opt-in
   `-DisableBuild` / `--disable-build` flag. Idempotent. PowerShell 5.1 compatible.
+- **Telegram gateway** (`gateway/`, separate Node package) — talk to MOA from
+  Telegram. Spawns its OWN `opencode serve` and sets the server password itself
+  (the ambient `OPENCODE_SERVER_PASSWORD` varies between shells -> 401s; this
+  was a Phase 0 finding). Server binds 127.0.0.1; Telegram via outbound polling
+  (no inbound ports). Security: allowlist + one-time pairing code (admin), default
+  agent `chat` (no shell), `dev` is admin-only and explicit. Commands: /pair,
+  /chat, /dev, /plan, /new, /status. Built on grammy + @opencode-ai/sdk.
+  Phases 1-2 done and smoke-tested end-to-end (spawn -> session -> prompt).
+  Phase 3 (auto-start daemon) pending - run manually first with a real token.
 
 ## Runtime facts
 
@@ -72,10 +81,13 @@ GitHub: https://github.com/asphyksia/MOA
 
 ## Next candidates (not started)
 
-- Confirm desktop app shows dev/chat after restart.
+- Telegram gateway Phase 3: wrap as auto-start daemon (Task Scheduler / systemd
+  / launchd) with logs + crash restart. Run manually first to confirm token.
+- Verify whether Telegram sessions sync/refresh into the desktop GUI (unverified;
+  likely shows after refresh since sessions persist to disk, but not live-mirror).
 - Real-use testing of chat/dev (tone, memory recall, RAG).
 - Possible: more MCP servers, agentskills.io skills, embeddings (semantic
-  search), Telegram/daemon gateway.
+  search), image/voice tools.
 
 ## Commit log (recent)
 
