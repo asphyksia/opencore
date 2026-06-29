@@ -229,7 +229,10 @@ fi
 
 echo
 echo "Done. opencore is installed globally."
-echo "Open 'opencode' from any directory and press Tab to switch between dev / chat."
+echo "Open 'opencode' from any directory and press Tab to switch between dev / chat / plan."
 if [ "$DISABLE_BUILD" != "1" ]; then
   echo "Tip: re-run with --disable-build to hide the built-in 'build' agent."
+fi
+if [ "$DISABLE_PLAN" != "1" ]; then
+  echo "Tip: re-run with --disable-plan to hide the built-in 'plan' agent."
 fi

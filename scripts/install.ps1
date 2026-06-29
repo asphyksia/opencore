@@ -254,7 +254,10 @@ if ($Embeddings -eq "none") {
 
 Write-Host ""
 Write-Host "Done. opencore is installed globally."
-Write-Host "Open 'opencode' from any directory and press Tab to switch between dev / chat."
+Write-Host "Open 'opencode' from any directory and press Tab to switch between dev / chat / plan."
 if (-not $DisableBuild) {
   Write-Host "Tip: re-run with -DisableBuild to hide the built-in 'build' agent."
+}
+if (-not $DisablePlan) {
+  Write-Host "Tip: re-run with -DisablePlan to hide the built-in 'plan' agent."
 }
