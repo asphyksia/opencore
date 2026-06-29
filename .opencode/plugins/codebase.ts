@@ -80,15 +80,9 @@ export const CodebasePlugin: Plugin = async ({ directory, worktree, $, client })
   return {
     tool: {
       codebase_index: tool({
-        description:
-          "Build or rebuild the full-text index of the current project's code " +
-          "so it can be searched with codebase_search. Run this once per " +
-          "project (or after large changes). Respects .gitignore.",
+        description: "Build or rebuild the full-text index of the project's code. Respects .gitignore.",
         args: {
-          rebuild: tool.schema
-            .boolean()
-            .optional()
-            .describe("If true, clear the existing index before reindexing."),
+          rebuild: tool.schema.boolean().optional().describe("Clear and rebuild from scratch."),
         },
         async execute(args) {
           if (!isProjectRoot(projectDir)) {
@@ -104,18 +98,10 @@ export const CodebasePlugin: Plugin = async ({ directory, worktree, $, client })
       }),
 
       codebase_search: tool({
-        description:
-          "Search the current project's code for relevant snippets by keyword. " +
-          "Returns matching chunks with file path and line range. Use this to " +
-          "locate where something is implemented before reading whole files.",
+        description: "Search the project's code for snippets by keyword. Returns file path + line range.",
         args: {
           query: tool.schema.string().describe("Keywords to search for in the code."),
-          limit: tool.schema
-            .number()
-            .min(1)
-            .max(20)
-            .optional()
-            .describe("Max results (default 8)."),
+          limit: tool.schema.number().min(1).max(20).optional(),
         },
         async execute(args) {
           const limit = args.limit ?? 8

@@ -122,32 +122,13 @@ export const SessionSearchPlugin: Plugin = async ({ client }) => {
     tool: {
       session_search: tool({
         description:
-          "Recall past conversations across sessions. Three modes:\n" +
-          "- DISCOVERY: pass `query` to full-text search all past sessions.\n" +
-          "- SCROLL: pass `session_id` + `around_message_id` to read a window " +
-          "of messages around a specific point.\n" +
-          "- BROWSE: pass nothing to list recent sessions.\n" +
-          "Use this when the user references something from a previous " +
-          "conversation, or to recall how a problem was solved before.",
+          "Search past conversations. Modes: query=full-text search, " +
+          "session_id+around_message_id=scroll a window, no args=browse recent.",
         args: {
-          query: tool.schema
-            .string()
-            .optional()
-            .describe("Keywords to search past conversations (DISCOVERY mode)."),
-          session_id: tool.schema
-            .string()
-            .optional()
-            .describe("Session to scroll within (SCROLL mode, with around_message_id)."),
-          around_message_id: tool.schema
-            .string()
-            .optional()
-            .describe("Anchor message id to read around (SCROLL mode)."),
-          limit: tool.schema
-            .number()
-            .min(1)
-            .max(20)
-            .optional()
-            .describe("Max results (default 8 for discovery, 10 for browse)."),
+          query: tool.schema.string().optional().describe("Keywords to search past sessions."),
+          session_id: tool.schema.string().optional().describe("Session to scroll within."),
+          around_message_id: tool.schema.string().optional().describe("Anchor message id."),
+          limit: tool.schema.number().min(1).max(20).optional(),
         },
         async execute(args, context) {
           const currentSession = context?.sessionID

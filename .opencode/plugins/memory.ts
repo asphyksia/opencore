@@ -51,6 +51,33 @@ export const MemoryPlugin: Plugin = async ({ client }) => {
     return facts
   }
 
+  /**
+   * OPTIONAL: returns `{providerID, modelID}` if the user has set `small_model`
+   * in their opencode config, otherwise returns null. Reflection and conflict
+   * resolution use this when available to save tokens, and fall back to the
+   * main model automatically otherwise. Users who haven't configured it pay
+   * nothing extra — the feature is entirely opt-in.
+   */
+  let smallModelCache: { providerID: string; modelID: string } | null | undefined = undefined
+  async function getSmallModel(): Promise<{ providerID: string; modelID: string } | null> {
+    if (smallModelCache !== undefined) return smallModelCache
+    try {
+      const cfg = await client.config.get()
+      const sm = (cfg.data as any)?.small_model
+      if (typeof sm === "string" && sm.includes("/")) {
+        const [providerID, modelID] = sm.split("/", 2)
+        if (providerID && modelID) {
+          smallModelCache = { providerID, modelID }
+          return smallModelCache
+        }
+      }
+    } catch {
+      /* fall through to null */
+    }
+    smallModelCache = null
+    return null
+  }
+
   async function log(message: string, level: "info" | "warn" = "info") {
     try {
       await client.app.log({ body: { service: "opencore-memory", level, message } })
@@ -60,9 +87,9 @@ export const MemoryPlugin: Plugin = async ({ client }) => {
   }
 
   /**
-   * Execute an isolated LLM call in a temporary child session, using the same
-   * model the user already has configured (no separate model required).
-   * Returns the text response or null on error.
+   * Execute an isolated LLM call in a temporary child session. Uses
+   * `small_model` if the user has configured one in opencode.json, otherwise
+   * falls back to the main model. Returns the text response or null on error.
    */
   async function llmCall(parentSessionId: string, promptText: string): Promise<string | null> {
     let tempSessionId: string | null = null
@@ -74,13 +101,16 @@ export const MemoryPlugin: Plugin = async ({ client }) => {
       if (!session.data?.id) return null
       tempSessionId = session.data.id
 
-      // Make the LLM call using the agent's own model (no model override).
+      // Use small_model if configured, otherwise the agent's main model.
+      const model = await getSmallModel()
+
       const result = await client.session.prompt({
         path: { id: tempSessionId },
         body: {
           agent: "dev",
-          noReply: true, // Don't wait for streaming, just get the response
-          tools: {}, // Disable all tools
+          noReply: true,
+          tools: {}, // Disable all tools for the temp call
+          ...(model && { model }),
           parts: [{ type: "text", text: promptText }],
         },
       })
@@ -253,21 +283,11 @@ If nothing is worth remembering, return: []`
   return {
     tool: {
       memory_remember: tool({
-        description:
-          "Store a durable fact about the user or project in long-term memory " +
-          "(preferences, goals, decisions, identity, project facts). Use for " +
-          "information that should persist across sessions.",
+        description: "Store a durable fact in long-term memory (preferences, goals, decisions, project facts).",
         args: {
-          text: tool.schema.string().describe("The fact to remember, phrased standalone."),
-          type: tool.schema
-            .string()
-            .describe("Category: identity | preference | goal | project | decision | note"),
-          importance: tool.schema
-            .number()
-            .min(0)
-            .max(1)
-            .describe("How important this fact is, 0..1.")
-            .optional(),
+          text: tool.schema.string().describe("The fact, phrased standalone."),
+          type: tool.schema.string().describe("identity|preference|goal|project|decision|note"),
+          importance: tool.schema.number().min(0).max(1).optional().describe("0..1"),
         },
         async execute(args, context) {
           const fact: Fact = {
@@ -307,12 +327,10 @@ If nothing is worth remembering, return: []`
       }),
 
       memory_search: tool({
-        description:
-          "Search long-term memory for facts relevant to a query. Returns the " +
-          "most relevant stored facts about the user or project.",
+        description: "Search long-term memory for facts relevant to a query.",
         args: {
           query: tool.schema.string().describe("What to look for."),
-          limit: tool.schema.number().min(1).max(20).optional().describe("Max results (default 5)."),
+          limit: tool.schema.number().min(1).max(20).optional(),
         },
         async execute(args) {
           const limit = args.limit ?? 5
@@ -342,11 +360,11 @@ If nothing is worth remembering, return: []`
       const facts = await getAlwaysVisibleFacts()
       if (facts.length === 0) return
 
+      // Compact format: type abbrev + fact, one per line. ~30% smaller than
+      // "## Long-term memory...\nKey facts...\n- [type] text" headers.
       const block =
-        "## Long-term memory (opencore)\n" +
-        "Key facts about the user/project that should inform your responses:\n" +
-        facts.map((f) => `- [${f.type}] ${f.text}`).join("\n")
-
+        "[opencore mem] " +
+        facts.map((f) => `${f.type}:${f.text}`).join(" | ")
       if (Array.isArray(output?.system)) {
         output.system.push(block)
       }
@@ -357,9 +375,8 @@ If nothing is worth remembering, return: []`
       const facts = await getAlwaysVisibleFacts()
       if (facts.length === 0) return
       const block =
-        "## Long-term memory (opencore)\n" +
-        "Persisted facts about the user/project to keep in mind:\n" +
-        facts.map((f) => `- [${f.type}] ${f.text}`).join("\n")
+        "[opencore mem] " +
+        facts.map((f) => `${f.type}:${f.text}`).join(" | ")
       if (Array.isArray(output?.context)) output.context.push(block)
     },
   }
