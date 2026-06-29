@@ -67,7 +67,7 @@ Write-Host "Syncing plugins..."
 $destPlugins = Join-Path $dest "plugins"
 # Remove previously-synced opencore plugin files to avoid stale leftovers, but leave
 # any unrelated user plugins untouched.
-foreach ($name in @("memory.ts", "codebase.ts", "budget.ts", "session-search.ts")) {
+foreach ($name in @("memory.ts", "codebase.ts", "budget.ts", "session-search.ts", "skill-telemetry.ts")) {
   $p = Join-Path $destPlugins $name
   if (Test-Path $p) { Remove-Item $p -Force }
 }

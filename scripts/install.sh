@@ -64,7 +64,7 @@ done
 
 # 2) Sync plugins (including lib/), clearing stale opencore files first.
 echo "Syncing plugins..."
-for name in memory.ts codebase.ts budget.ts session-search.ts; do
+for name in memory.ts codebase.ts budget.ts session-search.ts skill-telemetry.ts; do
   rm -f "$DEST/plugins/$name"
 done
 rm -rf "$DEST/plugins/lib"
