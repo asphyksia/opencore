@@ -25,7 +25,8 @@ Switch between them anytime with `Tab`.
 - **Long-term memory**: Persisted facts, preferences, and project knowledge in local SQLite
 - **Automatic extraction**: every 5 turns, durable facts are extracted and stored in the background
 - **Conflict resolution**: new facts are reconciled with similar existing ones (ADD / UPDATE / DELETE / SKIP), so memory stays coherent
-- **Daily Markdown exports**: facts are also written to `~/.opencore/memory/exports/YYYY-MM-DD.md` for human reading and `grep` (DB remains source of truth)
+- **Consolidation** (`memory_consolidate`): scores all facts by importance × recency × retrieval frequency, promotes top facts to `MEMORY.md` (OpenClaw-inspired dreaming)
+- **Daily Markdown exports**: facts are also written to `~/.opencore/memory/exports/YYYY-MM-DD.md` for human reading and `grep`
 - The agent remembers what you tell it across sessions and auto-injects relevant context
 
 ### 🔍 Codebase Understanding
@@ -102,6 +103,7 @@ Optional: set your preferred model via env (see `.env.example`).
 - `memory_remember { text, type, importance? }` — store a fact (`preference` | `goal` | `project` | `decision` | `note`)
 - `memory_search { query }` — retrieve relevant stored facts
 - `memory_export { backfill? }` — list or regenerate daily Markdown exports at `~/.opencore/memory/exports/`
+- `memory_consolidate` — score and promote top facts to `MEMORY.md` (long-term curated summary)
 
 **Codebase**
 - `codebase_index { rebuild? }` — index the current project (run once, then auto-updates)
