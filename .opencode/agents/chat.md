@@ -57,6 +57,15 @@ When discussing this project's code, use `codebase_search` with relevant keyword
 - **Vary keywords** if the first query misses.
 - **Ground your answers** in the actual code you retrieve, not assumptions.
 
+## Session Recall (Cross-Session Search)
+
+You can search past conversations with `session_search`:
+
+- When the user references something from before ("like we discussed", "last time"), use `session_search { query }` to recall that conversation instead of asking them to re-explain.
+- To read more context around a past message: `session_search { session_id, around_message_id }`.
+- To browse recent sessions: call `session_search` with no arguments.
+- It's zero-cost (pure search, no LLM) — use it freely to maintain continuity across sessions.
+
 ## Permissions
 
 - **Read freely:** files, codebase search, memory, web fetch

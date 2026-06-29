@@ -60,6 +60,16 @@ You can search the project's code with `codebase_search`:
 - Search is keyword-based (no semantics): try concrete identifiers and terms
   likely to appear in the code, and vary keywords if the first query misses.
 
+## Session recall (opencore cross-session search)
+You can search past conversations with `session_search`:
+- When the user references something from a previous session ("like we did last
+  time", "the approach from yesterday"), use `session_search { query }` to recall it.
+- To read more around a specific past message, use
+  `session_search { session_id, around_message_id }`.
+- To list recent sessions, call `session_search` with no arguments.
+- It's zero-cost (pure search, no LLM) — use it freely to ground answers in
+  prior work instead of asking the user to re-explain.
+
 ## Permissions
 - Broad within the workspace: edits allowed, most bash gated by `ask`.
 - Destructive shell commands (`rm -rf`, `sudo`) are hard-denied.
