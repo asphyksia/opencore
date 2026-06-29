@@ -1,6 +1,6 @@
 import { homedir } from "node:os"
 import { join } from "node:path"
-import { mkdirSync, readFileSync, existsSync, renameSync } from "node:fs"
+import { mkdirSync, readFileSync, existsSync, renameSync, writeFileSync, unlinkSync } from "node:fs"
 import { createHash } from "node:crypto"
 import {
   embedDocuments,
@@ -340,10 +340,9 @@ export async function countFacts(): Promise<number> {
 // the .md is regenerated on every add/update/delete of a fact for that day.
 // One file per day, no accumulation of stale files.
 
-import { join as _join } from "node:path"
-import { mkdirSync as _mkdirSync, writeFileSync as _writeFileSync, unlinkSync as _unlinkSync } from "node:fs"
 
-const exportsDir = _join(dir, "exports")
+
+const exportsDir = join(dir, "exports")
 
 function dayKey(iso: string): string {
   // Accepts either a full ISO timestamp or a YYYY-MM-DD string. Returns YYYY-MM-DD.
@@ -377,13 +376,13 @@ export async function exportDayMarkdown(createdAt: string): Promise<void> {
     )
     .all(key) as Fact[]
 
-  _mkdirSync(exportsDir, { recursive: true })
-  const path = _join(exportsDir, `${key}.md`)
+  mkdirSync(exportsDir, { recursive: true })
+  const path = join(exportsDir, `${key}.md`)
 
   if (facts.length === 0) {
     // No facts for that day: remove the file if it exists, otherwise no-op.
     try {
-      _unlinkSync(path)
+      unlinkSync(path)
     } catch {
       /* file may not exist */
     }
@@ -421,7 +420,7 @@ export async function exportDayMarkdown(createdAt: string): Promise<void> {
     lines.push("")
   }
 
-  _writeFileSync(path, lines.join("\n"), "utf8")
+  writeFileSync(path, lines.join("\n"), "utf8")
 }
 
 /** Regenerate all day's exports. Useful for one-time backfill or after a schema change. */
@@ -453,7 +452,7 @@ export async function exportedDays(): Promise<string[]> {
 
 const CONSOLIDATE_TOP_N = 8       // Facts promoted to always-visible
 const CONSOLIDATE_MIN_AGE_DAYS = 1 // Facts younger than this are not pruned
-const CONSOLIDATE_MEMORY_MD = _join(dir, "MEMORY.md")
+const CONSOLIDATE_MEMORY_MD = join(dir, "MEMORY.md")
 
 /**
  * Compute a consolidation score for a fact: importance (0..1) × recency
@@ -529,7 +528,7 @@ export async function consolidateMemory(): Promise<ConsolidationResult> {
     lines.push("")
   }
 
-  _writeFileSync(CONSOLIDATE_MEMORY_MD, lines.join("\n"), "utf8")
+  writeFileSync(CONSOLIDATE_MEMORY_MD, lines.join("\n"), "utf8")
 
   return {
     promoted: top.length,
@@ -558,9 +557,3 @@ export async function topConsolidated(limit = 8): Promise<Fact[]> {
   return scored.slice(0, limit).map((s) => s.fact)
 }
 
-/** Count of facts stored (for triggering consolidate suggestion). */
-export async function countFacts(): Promise<number> {
-  const d = await db()
-  const row = d.query("SELECT COUNT(*) AS n FROM facts").get() as { n: number }
-  return row?.n ?? 0
-}

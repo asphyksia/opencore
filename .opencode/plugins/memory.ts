@@ -197,9 +197,10 @@ Rules:
     try {
       // Fetch recent messages
       const msgs = await client.session.messages({ path: { id: sessionId } })
-      if (!msgs.data?.messages) return
+      const list = Array.isArray(msgs.data) ? msgs.data : msgs.data?.messages
+      if (!Array.isArray(list) || list.length === 0) return
 
-      const recent = msgs.data.messages.slice(-REFLECTION_WINDOW)
+      const recent = list.slice(-REFLECTION_WINDOW)
       if (recent.length === 0) return
 
       // Build a transcript hash to avoid re-processing the same window

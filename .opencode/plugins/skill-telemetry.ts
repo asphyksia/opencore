@@ -9,6 +9,7 @@ import {
   openSync,
   closeSync,
   renameSync,
+  unlinkSync,
 } from "node:fs"
 
 /**
@@ -103,10 +104,10 @@ function withLock<T>(fn: () => T): T {
         /* ignore */
       }
       try {
-        // best-effort: only unlink if we created it
-        // (don't unlink if it was there before us)
+        // We created it (lockFd !== null), so we must delete it.
+        unlinkSync(lockFile)
       } catch {
-        /* ignore */
+        /* best-effort: if deletion fails, the next run will time out gracefully */
       }
     }
   }

@@ -88,17 +88,17 @@ export const BudgetPlugin: Plugin = async ({ client }) => {
         const tokens = extractTokens(msg)
         if (tokens > 0) {
           state.total += tokens
-          save(state)
 
           if (!state.warned && state.total >= BUDGET * WARN_AT) {
             state.warned = true
-            save(state)
             const pct = Math.round((state.total / BUDGET) * 100)
             await log(
               `Token budget at ${pct}% (${state.total}/${BUDGET} today).`,
               "warn",
             )
           }
+
+          save(state)
         }
       }
     },
