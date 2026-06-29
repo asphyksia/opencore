@@ -1,4 +1,4 @@
-# opencore
+# Opencore
 
 **A professional coding agent with a first-class conversational mode.**
 
@@ -8,7 +8,7 @@ Built on [opencode](https://opencode.ai) as a dependency (not a fork), opencore 
 
 ## What is opencore?
 
-opencore gives you two agents in one:
+Opencore gives you two agents in one:
 
 - **`dev` mode** — Professional coding assistant with broad permissions for actual development work
 - **`chat` mode** — Conversational helper, read-only by default, safe for exploration and questions
