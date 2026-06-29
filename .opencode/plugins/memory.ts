@@ -6,6 +6,8 @@ import {
   backfillEmbeddings,
   updateFact,
   deleteFact,
+  exportAllDays,
+  exportedDays,
   type Fact,
 } from "./lib/memory-store"
 
@@ -337,6 +339,25 @@ If nothing is worth remembering, return: []`
           const facts = await searchFacts(args.query, limit)
           if (facts.length === 0) return "No relevant memories found."
           return facts.map((f) => `- [${f.type}] ${f.text}`).join("\n")
+        },
+      }),
+
+      memory_export: tool({
+        description:
+          "List or backfill human-readable Markdown exports of memory facts at " +
+          "~/.opencore/memory/exports/YYYY-MM-DD.md. Call with no args to list " +
+          "existing days, or pass backfill=true to regenerate all.",
+        args: {
+          backfill: tool.schema.boolean().optional().describe("Regenerate all day exports from the DB."),
+        },
+        async execute(args) {
+          if (args.backfill) {
+            const n = await exportAllDays()
+            return `Regenerated ${n} day export(s) at ~/.opencore/memory/exports/`
+          }
+          const days = await exportedDays()
+          if (days.length === 0) return "No day exports yet. They are created automatically as facts are added."
+          return `Exported days: ${days.join(", ")}\nPath: ~/.opencore/memory/exports/`
         },
       }),
     },
