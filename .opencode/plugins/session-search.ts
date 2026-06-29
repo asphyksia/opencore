@@ -67,7 +67,8 @@ export const SessionSearchPlugin: Plugin = async ({ client }) => {
     if (!sessionId || sessionId.startsWith("memory-temp-")) return
     try {
       const msgs = await client.session.messages({ path: { id: sessionId } })
-      const list = msgs.data?.messages
+      // The response data IS the array of messages (each {info, parts}).
+      const list = Array.isArray(msgs.data) ? msgs.data : msgs.data?.messages
       if (!Array.isArray(list) || list.length === 0) return
 
       // Skip if message count hasn't grown since last index for this session.
@@ -89,12 +90,12 @@ export const SessionSearchPlugin: Plugin = async ({ client }) => {
       const existing = await indexedMessageIds(sessionId)
       const toStore: StoredMessage[] = []
 
-      for (const m of list as any[]) {
-        // Messages from session.messages() have .id, .role, .parts at the top level
-        // (same shape as used in memory.ts auto-extraction).
-        const id = m.id
-        const role = m.role
-        const parts = Array.isArray(m.parts) ? m.parts : []
+      for (const entry of list as any[]) {
+        // Each entry is { info: { id, role, time, ... }, parts: [...] }
+        const info = entry.info ?? entry
+        const id = info.id
+        const role = info.role
+        const parts = Array.isArray(entry.parts) ? entry.parts : (Array.isArray(info.parts) ? info.parts : [])
         if (!id || !role || existing.has(id)) continue
         const text = extractTextFromParts(parts)
         if (!text) continue
@@ -103,7 +104,7 @@ export const SessionSearchPlugin: Plugin = async ({ client }) => {
           sessionId,
           role,
           text,
-          createdAt: m.time?.created ?? Date.now(),
+          createdAt: info.time?.created ?? Date.now(),
         })
       }
 
