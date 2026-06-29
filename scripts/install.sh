@@ -8,16 +8,19 @@
 #
 # Usage:
 #   ./scripts/install.sh
-#   ./scripts/install.sh --disable-build
+#   ./scripts/install.sh --disable-build --disable-plan
 #
 # Flags:
 #   --disable-build   Also disable opencode's built-in `build` agent (off by
 #                     default - opencore does not touch your existing agents unless
 #                     you ask). `dev` is opencore's tuned replacement for `build`.
+#   --disable-plan    Also disable opencode's built-in `plan` agent. opencore's
+#                     `plan.md` is aligned with dev/chat and mentions opencore plugins.
 
 set -euo pipefail
 
 DISABLE_BUILD=0
+DISABLE_PLAN=0
 EMBEDDINGS=none          # none | llama | ollama | cloud
 EMBED_URL=""
 EMBED_MODEL=harrier
@@ -25,6 +28,7 @@ EMBED_API_KEY=""
 for arg in "$@"; do
   case "$arg" in
     --disable-build) DISABLE_BUILD=1 ;;
+    --disable-plan)  DISABLE_PLAN=1 ;;
     --embeddings=*)  EMBEDDINGS="${arg#*=}" ;;
     --embed-url=*)   EMBED_URL="${arg#*=}" ;;
     --embed-model=*) EMBED_MODEL="${arg#*=}" ;;
@@ -112,10 +116,11 @@ fi
 # 4) Merge opencore defaults into the global opencode.json using node (cross-platform,
 #    no jq dependency). Preserves existing keys; never overwrites provider/model.
 echo "Merging global opencode.json..."
-DISABLE_BUILD="$DISABLE_BUILD" CFG="$DEST/opencode.json" node - <<'NODE'
+DISABLE_BUILD="$DISABLE_BUILD" DISABLE_PLAN="$DISABLE_PLAN" CFG="$DEST/opencode.json" node - <<'NODE'
 const fs = require("fs");
 const path = process.env.CFG;
 const disableBuild = process.env.DISABLE_BUILD === "1";
+const disablePlan = process.env.DISABLE_PLAN === "1";
 
 let cfg = {};
 if (fs.existsSync(path)) {
@@ -157,6 +162,15 @@ if (disableBuild) {
   console.log("  + disabled built-in 'build' agent (requested)");
 } else {
   console.log("  - left 'build' agent enabled (use --disable-build to disable it)");
+}
+
+if (disablePlan) {
+  cfg.agent = cfg.agent || {};
+  cfg.agent.plan = cfg.agent.plan || {};
+  cfg.agent.plan.disable = true;
+  console.log("  + disabled built-in 'plan' agent (requested)");
+} else {
+  console.log("  - left 'plan' agent enabled (use --disable-plan to disable it)");
 }
 
 // Add opencore's default MCP servers (only if not already present).

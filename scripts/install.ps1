@@ -7,15 +7,18 @@
 #
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-#   powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -DisableBuild
+#   powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -DisableBuild -DisablePlan
 #
 # Flags:
 #   -DisableBuild   Also disable opencode's built-in `build` agent (off by
 #                   default - opencore does not touch your existing agents unless
 #                   you ask). `dev` is opencore's tuned replacement for `build`.
+#   -DisablePlan    Also disable opencode's built-in `plan` agent. opencore's
+#                   `plan.md` is aligned with dev/chat and mentions opencore plugins.
 
 param(
   [switch]$DisableBuild,
+  [switch]$DisablePlan,
   # Embedding source for semantic search. Writes ~/.opencore/embeddings.json so the
   # CLI, desktop app, and daemon all use it.
   #   llama   = local llama.cpp server (recommended) at -EmbedUrl
@@ -192,6 +195,17 @@ if ($DisableBuild) {
   Write-Host "  + disabled built-in 'build' agent (requested)"
 } else {
   Write-Host "  - left 'build' agent enabled (use -DisableBuild to disable it)"
+}
+
+# Optionally disable the built-in `plan` agent (opt-in). opencore's `plan.md` is
+# aligned with dev/chat, mentions opencore plugins, and has consistent voice.
+if ($DisablePlan) {
+  if (-not $cfg.Contains("agent")) { $cfg["agent"] = [ordered]@{} }
+  if (-not $cfg["agent"].Contains("plan")) { $cfg["agent"]["plan"] = [ordered]@{} }
+  $cfg["agent"]["plan"]["disable"] = $true
+  Write-Host "  + disabled built-in 'plan' agent (requested)"
+} else {
+  Write-Host "  - left 'plan' agent enabled (use -DisablePlan to disable it)"
 }
 
 # Add opencore's default MCP servers (only if a server of that name isn't already
