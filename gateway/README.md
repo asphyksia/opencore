@@ -82,17 +82,24 @@ If you need to pair again (lost access, want to change admin, etc.):
 ```powershell
 cd gateway
 
-# Stop the gateway first (if running as daemon)
+# 1. Stop the gateway (if running as daemon)
 powershell -ExecutionPolicy Bypass -File scripts\daemon.ps1 stop
 
-# Reset pairing (clears all admins/members, generates new code)
+# 2. Reset pairing (clears all admins/members, generates new code)
 npm run reset-pairing
 
-# Restart
+# 3. Restart (the bot will load the new code)
 powershell -ExecutionPolicy Bypass -File scripts\daemon.ps1 start
+
+# 4. Check logs to confirm the new code
+powershell -ExecutionPolicy Bypass -File scripts\daemon.ps1 logs
 ```
 
-Or if running manually (`npm run dev`), just stop it (Ctrl+C), run `npm run reset-pairing`, then `npm run dev` again. The new code prints to console — send `/pair <code>` in Telegram to become admin.
+The new pairing code appears in the logs. Send `/pair <code>` in Telegram to become admin.
+
+**Important:** The gateway must be stopped BEFORE running `reset-pairing`, otherwise it keeps the old code in memory and rejects the new one.
+
+If running manually with `npm run dev`, stop it (Ctrl+C), run `npm run reset-pairing`, then `npm run dev` again.
 
 ## Daemon (run at logon, auto-restart)
 
