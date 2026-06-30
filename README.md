@@ -97,6 +97,26 @@ Optional: set your preferred model via env (see `.env.example`).
 
 ---
 
+## Development checks
+
+Run the full local verification suite before committing changes:
+
+```sh
+npm run check
+```
+
+This verifies:
+
+- `opencode --version` is available and pinned to the expected version
+- the Telegram gateway TypeScript build passes
+- opencore's local plugins pass their TypeScript check via `tsconfig.plugins.json`
+
+The plugin check uses the repository's tracked `.opencode/package.json` and
+`.opencode/package-lock.json` as the runtime dependency manifest for local
+opencode plugins. Keep those files in sync when plugin dependencies change.
+
+---
+
 ## Tools reference
 
 **Memory**
@@ -167,6 +187,10 @@ scripts/
 ├── install.ps1             # Windows installer
 └── install.sh              # macOS/Linux installer
 ```
+
+The `.opencode/package.json` and `.opencode/package-lock.json` files are part
+of the plugin runtime. They are intentionally tracked so local installs and the
+Docker image use the same pinned plugin dependencies.
 
 ---
 

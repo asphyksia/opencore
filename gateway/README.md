@@ -73,8 +73,13 @@ Telegram  <--outbound polling-->  gateway (this)  <--HTTP 127.0.0.1-->  opencode
 | `OPENCORE_GATEWAY_DEFAULT_AGENT` | `chat` | `chat` \| `dev` \| `plan` |
 | `OPENCORE_GATEWAY_WORKDIR` | cwd | directory the agent operates in |
 | `OPENCORE_OPENCODE_BIN` | auto | explicit path to opencode if needed |
+| `OPENCORE_STATE_DIR` | `~/.opencore` | shared state root for allowlist, memory, sessions, codebase, budget, skills, embeddings config |
 | `OPENCORE_MODELS` | (built-in list) | comma-separated `id:label` pairs for `/models` |
 | `OPENCORE_DEFAULT_MODEL` | (opencode's model) | default model for new chats |
+
+`OPENCORE_*` is the canonical env var prefix. Older `opencore_*` names are
+accepted as a temporary compatibility fallback, but new config should use
+uppercase names.
 
 State (pairing/allowlist) persists to `~/.opencore/gateway/allowlist.json`.
 
@@ -125,8 +130,7 @@ powershell -ExecutionPolicy Bypass -File scripts\daemon.ps1 uninstall # remove f
 - The supervisor (`scripts\run-supervised.ps1`) restarts the gateway on crash
   with backoff, up to 10 times per minute.
 - The gateway runs only while you are logged in and your PC is on. For 24/7
-  availability independent of your machine, deploy on a server (planned Docker
-  setup).
+  availability independent of your machine, deploy on a server with Docker.
 
 ## Docker (24/7 on a server/VPS)
 
@@ -141,7 +145,9 @@ docker compose logs -f          # find the pairing code, then /pair in Telegram
 ```
 
 - `restart: unless-stopped` keeps it alive across crashes/reboots.
-- State (long-term memory, pairing) persists in the `opencore-state` volume.
+- State (long-term memory, pairing, session index, codebase index, budget, skill
+  telemetry, embeddings config) persists in the `opencore-state` volume at
+  `/home/opencore/.opencore`.
 - No inbound ports are published - Telegram is reached via outbound polling.
 - Default agent is `chat` (no shell). Set `OPENCORE_GATEWAY_DEFAULT_AGENT=dev` only
   if you accept remote code execution inside the container.
